@@ -22,6 +22,8 @@ This workspace had no configured Git remote. Add yours and push without force: `
 
 Run `streamlit run app/streamlit_app.py`. If real DEM, rainfall, or inventory files are missing, the dashboard remains usable in explicitly labelled demonstration mode. Demonstration model metrics are not scientific validation. A boundary visualization is available at `reports/figures/sikkim_boundary.png`.
 
+The primary workflow is now on the landing page under **Landslide risk prediction**. Enter coordinates, terrain, and rainfall, then select **ANALYZE LANDSLIDE RISK**. The result separates demonstration susceptibility from the heuristic rainfall-triggered score and explains the contributing factors.
+
 ## Problem and objectives
 
 Sikkim has steep terrain and rainfall-triggered slope instability. This MVP provides two distinct outputs: a static susceptibility score based on environmental features, and a rainfall-adjusted heuristic risk category. It is designed for transparent demonstration and data replacement, not exact event or time prediction.
