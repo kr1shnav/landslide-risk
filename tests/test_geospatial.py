@@ -4,6 +4,7 @@ import pandas as pd
 from src.data.boundary import validate_geojson,extract_sikkim_boundary
 from src.data.inventory import filter_to_boundary
 from src.features.terrain import terrain_derivatives,terrain_ruggedness_index
+from src.data.raster import srtm_tiles_for_bounds
 
 def test_boundary_validation_and_extraction(tmp_path):
     p=tmp_path/'india.geojson'; data={'type':'FeatureCollection','features':[{'type':'Feature','properties':{'shapeName':'Sikkim'},'geometry':{'type':'Polygon','coordinates':[[[88,27],[89,27],[89,28],[88,28],[88,27]]]}}]}; p.write_text(json.dumps(data))
@@ -27,3 +28,6 @@ def test_tri_shape_and_nodata_safe():
     import numpy as np
     tri=terrain_ruggedness_index(np.array([[1.,2.,3.],[2.,np.nan,4.],[3.,4.,5.]]))
     assert tri.shape==(3,3)
+
+def test_sikkim_srtm_tiles():
+    assert srtm_tiles_for_bounds((88.0134695,27.0794491,88.9201485,28.1289151))==['N27E088','N28E088']

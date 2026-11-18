@@ -3,6 +3,7 @@ from pathlib import Path
 import gzip
 import math
 import numpy as np
+import time
 
 def validate_raster(path: str | Path, bounds=None) -> dict:
     import rasterio
@@ -12,19 +13,32 @@ def validate_raster(path: str | Path, bounds=None) -> dict:
             minx,miny,maxx,maxy=bounds; b=src.bounds; result['covers_bounds']=b.left<=minx and b.bottom<=miny and b.right>=maxx and b.top>=maxy
         return result
 def srtm_tiles_for_bounds(bounds):
-    minx,miny,maxx,maxy=bounds; return [f'N{lat:02d}E{lon:03d}' for lat in range(math.floor(miny),math.ceil(maxy)) for lon in range(math.floor(minx),math.ceil(maxx))]
-def download_srtm_tiles(destination='data/raw/srtm',tiles=None,timeout=(30,600)):
+    minx,miny,maxx,maxy=bounds; result=[]
+    for lat in range(math.floor(miny),math.ceil(maxy)):
+        for lon in range(math.floor(minx),math.ceil(maxx)):
+            if lat < 0 or lon < 0: raise ValueError('SRTM naming for southern/western hemispheres is not implemented')
+            if lat < maxy and lat+1 > miny and lon < maxx and lon+1 > minx: result.append(f'N{lat:02d}E{lon:03d}')
+    return result
+def download_srtm_tiles(destination='data/raw/srtm',tiles=None,timeout=(30,600),retries=3,min_bytes=500_000):
     import requests
-    out=Path(destination); out.mkdir(parents=True,exist_ok=True); tiles=tiles or ['N27E088','N27E089','N28E088','N28E089']; results=[]
+    out=Path(destination); out.mkdir(parents=True,exist_ok=True); tiles=tiles or ['N27E088','N28E088']; results=[]
     for tile in tiles:
         url=f'https://s3.amazonaws.com/elevation-tiles-prod/skadi/{tile[:3]}/{tile}.hgt.gz'; dest=out/(tile+'.hgt.gz')
-        with requests.get(url,stream=True,timeout=timeout) as r:
-            r.raise_for_status()
-            with dest.open('wb') as f:
-                for chunk in r.iter_content(1024*1024): f.write(chunk)
-        with gzip.open(dest,'rb') as f: header=f.read(2)
-        if header != b'\x00\x00': raise ValueError(f'Invalid SRTM gzip payload: {dest}')
-        results.append(dest)
+        error=None
+        for attempt in range(retries):
+            try:
+                with requests.get(url,stream=True,timeout=timeout) as r:
+                    r.raise_for_status()
+                    with dest.open('wb') as f:
+                        for chunk in r.iter_content(1024*1024): f.write(chunk)
+                if dest.stat().st_size < min_bytes: raise ValueError('SRTM payload is unexpectedly small')
+                with gzip.open(dest,'rb') as f: raw=f.read(2)
+                if raw != b'\x00\x00': raise ValueError('SRTM payload is not a valid HGT stream')
+                results.append(dest); break
+            except Exception as exc:
+                error=exc
+                if attempt+1<retries: time.sleep(2**attempt)
+        else: raise RuntimeError(f'Failed to acquire {tile} after {retries} attempts: {error}')
     return results
 def hgt_to_geotiff(hgt_gz,destination):
     import rasterio
