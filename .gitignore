@@ -12,6 +12,7 @@ data/features/*
 !data/features/.gitkeep
 models/*.joblib
 reports/generated/
+reports/model_metrics.json
 *.tif
 *.nc
 *.zip
