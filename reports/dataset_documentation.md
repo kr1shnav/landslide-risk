@@ -10,3 +10,7 @@
 | Roads/rivers | OpenStreetMap | Vector/current | Product-dependent | ODbL attribution |
 
 No real-world records are fabricated. Demo features are deterministic test fixtures only. The app records actual file metadata during validation.
+
+## Validation and ingestion report
+
+Inventory ingestion normalizes column names, validates latitude/longitude presence for CSV files, requires a CRS for spatial files, counts missing values, and removes only exact duplicate rows. Same coordinates with different dates remain separate records. The boundary workflow downloads India ADM1 GeoJSON from geoBoundaries, extracts Sikkim, reprojects to EPSG:4326, and clips point inventories using a spatial join. Downloaded/raw files remain gitignored.

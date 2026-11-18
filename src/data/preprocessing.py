@@ -9,10 +9,26 @@ def remove_duplicates(df: pd.DataFrame, subset=None) -> pd.DataFrame:
     The number removed is stored in ``DataFrame.attrs`` for audit/reporting.
     No records are inferred or merged based on proximity.
     """
+    # Exact-row deduplication is intentionally date-aware: a date column is
+    # part of the row identity when present, so same-coordinate events on
+    # different dates are retained.
     before = len(df)
     cleaned = df.drop_duplicates(subset=subset, keep='first').reset_index(drop=True)
     cleaned.attrs['duplicates_removed'] = before - len(cleaned)
     return cleaned
+
+def clean_inventory(df: pd.DataFrame) -> tuple[pd.DataFrame, dict]:
+    """Normalize columns, remove exact duplicates, and report missing values."""
+    df = df.copy()
+    df.columns = [str(c).strip().lower() for c in df.columns]
+    cleaned = remove_duplicates(df)
+    report = {
+        'input_records': len(df),
+        'output_records': len(cleaned),
+        'duplicates_removed': cleaned.attrs.get('duplicates_removed', 0),
+        'missing_values': int(cleaned.isna().sum().sum()),
+    }
+    return cleaned, report
 
 def load_inventory(path: str | Path) -> pd.DataFrame:
     p=Path(path)
@@ -20,8 +36,7 @@ def load_inventory(path: str | Path) -> pd.DataFrame:
     else:
         import geopandas as gpd
         g=gpd.read_file(p).to_crs(4326); df=pd.DataFrame(g.drop(columns='geometry')); df['longitude']=g.geometry.x; df['latitude']=g.geometry.y
-    df.columns=[c.lower() for c in df.columns]
-    return remove_duplicates(df)
+    return clean_inventory(df)[0]
 def demo_features(n=240,seed=42):
     rng=np.random.default_rng(seed); d={f:rng.uniform(0,1,n) for f in FEATURES}
     d.update(latitude=rng.uniform(27.1,28.2,n),longitude=rng.uniform(88.0,88.9,n),label=(rng.random(n)<.35).astype(int))
