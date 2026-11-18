@@ -1,0 +1,7 @@
+study_area: Sikkim, India
+crs: EPSG:4326
+random_state: 42
+rainfall_thresholds_mm:
+  one_day: [25, 50, 100]
+  three_day: [50, 100, 200]
+  seven_day: [100, 200, 400]

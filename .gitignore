@@ -1,0 +1,17 @@
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.streamlit/secrets.toml
+.env
+data/raw/*
+data/processed/*
+data/features/*
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+!data/features/.gitkeep
+models/*.joblib
+reports/generated/
+*.tif
+*.nc
+*.zip
