@@ -12,6 +12,11 @@ from streamlit_folium import st_folium
 
 ROOT=Path(__file__).resolve().parents[1]
 st.set_page_config(page_title='Landslide Risk | Sikkim',page_icon='⛰️',layout='wide')
+st.markdown('''<style>
+.block-container {padding-top: 2rem; padding-bottom: 2rem;}
+[data-testid="stMetricValue"] {font-size: 1.35rem;}
+.risk-note {border-left: 4px solid #2f80ed; padding: .65rem 1rem; background: #f5f9ff;}
+</style>''',unsafe_allow_html=True)
 st.title('AI-Based Landslide Risk Assessment and Early Warning System')
 st.caption('Sikkim, India · transparent MVP with explicit real-data availability')
 df=demo_features(); dem=ROOT/'data/processed/sikkim_dem.tif'; inventory=ROOT/'data/raw/landslides.geojson'; rainfall=ROOT/'data/raw/rainfall.csv'
@@ -51,11 +56,11 @@ with t6:
         st.session_state['metrics']=result
     result=st.session_state.get('metrics')
     if result:
-        st.dataframe(pd.DataFrame(result).T[['accuracy','precision','recall','f1','roc_auc']],use_container_width=True)
+        st.dataframe(pd.DataFrame(result).T[['accuracy','precision','recall','f1','roc_auc']],width='stretch')
         st.warning('These metrics are demonstration-mode results from synthetic fixtures, not scientific validation.')
     else: st.info('Click the button to exercise the reproducible training pipeline. Real performance is shown only after genuine inventory data is supplied.')
 with t7:
     st.subheader('Dataset explorer')
     rows=[('Sikkim boundary','data/processed/sikkim_boundary.geojson',True),('SRTM DEM','data/processed/sikkim_dem.tif',dem.exists()),('Landslide inventory','data/raw/landslides.geojson',inventory.exists()),('Rainfall','data/raw/rainfall.csv',rainfall.exists())]
-    st.dataframe(pd.DataFrame(rows,columns=['dataset','expected_path','available']),use_container_width=True)
-    st.dataframe(df.head(20),use_container_width=True)
+    st.dataframe(pd.DataFrame(rows,columns=['dataset','expected_path','available']),width='stretch')
+    st.dataframe(df.head(20),width='stretch')
